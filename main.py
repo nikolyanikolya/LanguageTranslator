@@ -1,4 +1,5 @@
 import sys
+
 from antlr4 import *
 
 from PythonStatementsVisitor import PythonStatementsVisitor
@@ -23,10 +24,9 @@ def main(argv):
         tree = parser.prog()
         # evaluator
         visitor = PythonStatementsVisitor()
-        output = visitor.visitProg(tree)
+        output = visitor(tree)
         with open(argv[2], 'w') as f:
             f.write(output)
-            #f.write(Trees.toStringTree(tree, None, parser))
 
 
 if __name__ == '__main__':
