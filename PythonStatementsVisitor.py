@@ -9,6 +9,10 @@ PrintContext = Py.PrintContext
 ExprContext = Py.ExprContext
 Left_valueContext = Py.Left_valueContext
 Right_valueContext = Py.Right_valueContext
+If_context = Py.If_statementContext
+While_context = Py.While_statementContext
+Block_with_tabContext = Py.Block_with_tabContext
+Statement_with_tabContext = Py.Statement_with_tabContext
 
 
 class PythonStatementsVisitor(PythonVisitor):
@@ -19,10 +23,10 @@ class PythonStatementsVisitor(PythonVisitor):
     C_INPUT = 'scanf'
     C_PRINT = 'printf'
     TOKENS = {
-        "ID": 3,
-        "INTEGER": 13,
-        "INPUT": 5,
-        "EQUAL": 4
+        "ID": 6,
+        "INTEGER": 17,
+        "INPUT": 8,
+        "EQUAL": 7
     }
 
     @staticmethod
@@ -47,35 +51,55 @@ class PythonStatementsVisitor(PythonVisitor):
     def __call__(self, ctx: ProgContext):
         return self.visitProg(ctx)
 
-    def statement_traversal(self, ctx: ProgContext) -> str:
-        if ctx.children is not None and len(ctx.children) == 2:
-            return self.NEW_LINE + self.TAB + \
-                   self.visitStatement(self.find_statement_context(ctx)) \
-                   + self.statement_traversal(self.find_prog_context(ctx))
-        return ''
-
     def visitProg(self, ctx: ProgContext) -> str:
-        prog = self.PREFACE
+        prog = ""
         context = ctx
-        variables = []
-        while context.children is not None:
+        variables = set()
+        while context is not None and context.children is not None:
             context_snapshot = context
 
-            left_value = \
-                self.find_context(
-                    self.find_statement_context(context),
-                    Left_valueContext
-                )
-            if left_value is not None:
-                variables += self.__get_terminal_token(left_value, "ID")
+            if_context = self.find_context(context_snapshot, If_context)
+            if if_context is not None:
+                prog += self.visitIf_statement(if_context)
+
+            while_context = self.find_context(context_snapshot, While_context)
+            if while_context is not None:
+                prog += self.visitWhile_statement(while_context)
+
+            statement_context = self.find_statement_context(context_snapshot)
+            if statement_context is not None:
+                prog += self.TAB + self.visitStatement(statement_context) + self.NEW_LINE
+                left_value = \
+                    self.find_context(
+                        statement_context,
+                        Left_valueContext
+                    )
+                if left_value is not None:
+                    variables.add(self.__get_terminal_token(left_value, "ID"))
 
             context = self.find_prog_context(context_snapshot)
-        if variables:
-            prog += self.TAB + 'int ' + ', '.join(variables) + ";"
 
-        prog += self.statement_traversal(ctx)
-        prog += self.AFTERWORD
+        if variables:
+            prog = self.PREFACE \
+                   + self.TAB + 'int ' + ', '.join(variables) + ";" \
+                   + self.NEW_LINE \
+                   + prog \
+                   + self.AFTERWORD
+        else:
+            prog = self.PREFACE + prog + self.AFTERWORD
+
         return prog
+
+    # Visit a parse tree produced by PythonParser#block_with_tab.
+    def visitBlock_with_tab(self, ctx: Block_with_tabContext) -> str:
+        return self.TAB * 2 + (self.NEW_LINE + self.TAB * 2).join([
+            self.visitStatement_with_tab(ctx.getTypedRuleContext(Statement_with_tabContext, child))
+            for child in range(len(ctx.children))
+        ])
+
+    # Visit a parse tree produced by PythonParser#statement_with_tab.
+    def visitStatement_with_tab(self, ctx) -> str:
+        return self.__visit_statement(ctx.statement())
 
     # Visit a parse tree produced by PythonParser#left_value.
     def visitLeft_value(self, ctx: Left_valueContext) -> str:
@@ -94,11 +118,37 @@ class PythonStatementsVisitor(PythonVisitor):
     def visitRight_value(self, ctx: Right_valueContext):
         return ctx.getText()
 
+    # Visit a parse tree produced by PythonParser#if.
+    def visitIf_statement(self, ctx: If_context):
+        return self.TAB + "if (" + self.visitExpr(ctx.expr()) + ") {" + self.NEW_LINE \
+               + self.visitBlock_with_tab(ctx.block_with_tab()) + self.NEW_LINE \
+               + self.TAB + "}" + self.NEW_LINE
+
+    # Visit a parse tree produced by PythonParser#while.
+    def visitWhile_statement(self, ctx: While_context):
+        return self.TAB + "while (" + self.visitExpr(ctx.expr()) + ") {" + self.NEW_LINE \
+               + self.visitBlock_with_tab(ctx.block_with_tab()) + self.NEW_LINE \
+               + self.TAB + "}" + self.NEW_LINE
+
     # Visit a parse tree produced by PythonParser#statement.
-    def visitStatement(self, ctx: StatementContext) -> str:
+    def visitStatement(self, ctx) -> str:
+        return self.__visit_statement(ctx)
+
+    def __get_terminal_token(self, ctx, terminal: str) -> str:
+        return str(ctx.getToken(self.TOKENS.get(terminal), 0))
+
+    def __visit_statement(self, ctx):
         print_context = self.find_context(ctx, PrintContext)
         if print_context is not None:
             return self.visitPrint(print_context)
+        if_context = self.find_context(ctx, If_context)
+
+        if if_context is not None:
+            return self.visitIf_statement(if_context)
+        while_context = self.find_context(ctx, While_context)
+
+        if while_context is not None:
+            return self.visitWhile_statement(while_context)
 
         if ctx.right_value().getTypedRuleContexts(ExprContext):
             return self.visitLeft_value(ctx.left_value()) \
@@ -106,6 +156,3 @@ class PythonStatementsVisitor(PythonVisitor):
                    + self.visitRight_value(ctx.right_value()) + ";"
 
         return self.visitRight_value_with_input(ctx.right_value(), self.visitLeft_value(ctx.left_value()))
-
-    def __get_terminal_token(self, ctx, terminal: str) -> str:
-        return str(ctx.getToken(self.TOKENS.get(terminal), 0))

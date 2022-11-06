@@ -15,12 +15,12 @@ antlr4-parse Mygrammar.g4 prog -tree < input
 
 *Following command is useful for debugging and shows you the tokens were parsed:*
 ```console
-antlr4-parse Expr.g4 prog -tokens -trace < input
+antlr4-parse Mygrammar.g4 prog -tokens -trace < input
 ```
 
 *This command renders a beautiful picture with [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree)*
 ```console
-antlr4-parse Expr.g4 prog -gui < input
+antlr4-parse Mygrammar.g4 prog -gui < input
 ```
 
 For instance your grammar name is MyGrammar, then the following command helps you to generate code for lexer, parser and visitor.

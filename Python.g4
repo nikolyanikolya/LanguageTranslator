@@ -1,12 +1,20 @@
 grammar Python;
-prog: <EOF>
+prog: EOF
+    | if_statement prog
+    | while_statement prog
     | statement prog
     ;
+block_with_tab: statement_with_tab+ ;
+TAB: [\t];
+statement_with_tab: TAB* statement ;
 TYPE_ID: 'int' ;
 left_value: ID ;
 ID: [A-Za-z_][A-Za-z0-9_]* ;
 EQUAL: [=] ;
 INPUT: 'input' LEFT_PAREN RIGHT_PAREN ;
+COLON: ':' ;
+if_statement: 'if' expr COLON block_with_tab ;
+while_statement: 'while' expr COLON block_with_tab ;
 LEFT_PAREN: '(' ;
 RIGHT_PAREN: ')' ;
 PLUS: '+' ;
