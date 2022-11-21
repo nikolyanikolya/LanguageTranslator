@@ -13,7 +13,8 @@ If_context = Py.If_statementContext
 While_context = Py.While_statementContext
 Block_with_tabContext = Py.Block_with_tabContext
 Statement_with_tabContext = Py.Statement_with_tabContext
-
+Else_context = Py.Else_statementContext
+Elif_context = Py.Elif_statementContext
 
 class PythonStatementsVisitor(PythonVisitor):
     TAB = '\t'
@@ -23,10 +24,10 @@ class PythonStatementsVisitor(PythonVisitor):
     C_INPUT = 'scanf'
     C_PRINT = 'printf'
     TOKENS = {
-        "ID": 6,
-        "INTEGER": 17,
-        "INPUT": 8,
-        "EQUAL": 7
+        "ID": 8,
+        "INTEGER": 19,
+        "INPUT": 10,
+        "EQUAL": 9
     }
 
     @staticmethod
@@ -65,6 +66,14 @@ class PythonStatementsVisitor(PythonVisitor):
             while_context = self.find_context(context_snapshot, While_context)
             if while_context is not None:
                 prog += self.visitWhile_statement(while_context)
+
+            else_context = self.find_context(context_snapshot, Else_context)
+            if else_context is not None:
+                prog += self.visitElse_statement(else_context)
+
+            elif_context = self.find_context(context_snapshot, Elif_context)
+            if elif_context is not None:
+                prog += self.visitElif_statement(elif_context)
 
             statement_context = self.find_statement_context(context_snapshot)
             if statement_context is not None:
@@ -117,6 +126,18 @@ class PythonStatementsVisitor(PythonVisitor):
 
     def visitRight_value(self, ctx: Right_valueContext):
         return ctx.getText()
+
+        # Visit a parse tree produced by PythonParser#else_statement.
+    def visitElse_statement(self, ctx: Else_context):
+        return self.TAB + "else {" + self.NEW_LINE \
+               + self.visitBlock_with_tab(ctx.block_with_tab()) + self.NEW_LINE \
+               + self.TAB + "}" + self.NEW_LINE
+
+        # Visit a parse tree produced by PythonParser#elif_statement.
+    def visitElif_statement(self, ctx: Py.Elif_statementContext):
+        return self.TAB + "else if (" + self.visitExpr(ctx.expr()) + ")  {" + self.NEW_LINE \
+               + self.visitBlock_with_tab(ctx.block_with_tab()) + self.NEW_LINE \
+               + self.TAB + "}" + self.NEW_LINE
 
     # Visit a parse tree produced by PythonParser#if.
     def visitIf_statement(self, ctx: If_context):

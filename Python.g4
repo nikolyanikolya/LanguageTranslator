@@ -2,8 +2,13 @@ grammar Python;
 prog: EOF
     | if_statement prog
     | while_statement prog
+    | else_statement prog
+    | elif_statement prog
     | statement prog
     ;
+
+else_statement: 'else' COLON block_with_tab ;
+elif_statement: 'elif' expr COLON block_with_tab ;
 block_with_tab: statement_with_tab+ ;
 TAB: [\t];
 statement_with_tab: TAB* statement ;

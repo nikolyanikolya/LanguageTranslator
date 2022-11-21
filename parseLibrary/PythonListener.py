@@ -17,6 +17,24 @@ class PythonListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by PythonParser#else_statement.
+    def enterElse_statement(self, ctx:PythonParser.Else_statementContext):
+        pass
+
+    # Exit a parse tree produced by PythonParser#else_statement.
+    def exitElse_statement(self, ctx:PythonParser.Else_statementContext):
+        pass
+
+
+    # Enter a parse tree produced by PythonParser#elif_statement.
+    def enterElif_statement(self, ctx:PythonParser.Elif_statementContext):
+        pass
+
+    # Exit a parse tree produced by PythonParser#elif_statement.
+    def exitElif_statement(self, ctx:PythonParser.Elif_statementContext):
+        pass
+
+
     # Enter a parse tree produced by PythonParser#block_with_tab.
     def enterBlock_with_tab(self, ctx:PythonParser.Block_with_tabContext):
         pass

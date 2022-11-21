@@ -14,6 +14,16 @@ class PythonVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by PythonParser#else_statement.
+    def visitElse_statement(self, ctx:PythonParser.Else_statementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PythonParser#elif_statement.
+    def visitElif_statement(self, ctx:PythonParser.Elif_statementContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by PythonParser#block_with_tab.
     def visitBlock_with_tab(self, ctx:PythonParser.Block_with_tabContext):
         return self.visitChildren(ctx)
